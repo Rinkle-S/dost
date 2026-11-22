@@ -14,7 +14,7 @@ After each phase, stop, tell me how to test it, and commit to git.
 - The adult child worries and pays (to test at ₹299/month).
 
 ## Languages (MVP)
-English and Malayalam only (en-IN, ml-IN). The elder's language is a setting; replies and voice notes use it.
+English and Malayalam only (en-IN, ml-IN). Replies mirror the language of the elder's message (Malayalam in, Malayalam out; English in, English out). Messages the bot starts itself (reminders, nudges) use the PARENT_LANGUAGE setting. Emergency replies are always in both languages.
 
 ## India context (apply everywhere)
 - Timezone Asia/Kolkata (IST) for all scheduling and display. Set `process.env.TZ = 'Asia/Kolkata'` at startup, because servers usually run in UTC.
@@ -29,7 +29,7 @@ English and Malayalam only (en-IN, ml-IN). The elder's language is a setting; re
 - SEND_MODE stays `dry` by default. Switch to `live` only for short phone tests and the demo.
 - Twilio signature validation: add it in the polish phase, behind `VALIDATE_TWILIO_SIGNATURE=true` (validated against PUBLIC_BASE_URL + /whatsapp). Skip it if short on time.
 - Voice notes: the "please send text" reply is fine until Phase 3.
-- Hosting: **Render** free web service (not Replit/Vercel). Code on GitHub (needed for submission anyway), Render deploys from the repo on each push. Requirements: listen on 0.0.0.0 and process.env.PORT; `npm install` builds and `npm start` runs; TZ=Asia/Kolkata; ffmpeg via ffmpeg-static. Render's free disk is wiped on every restart or redeploy, so seed sample data on startup if the DB is empty (SQLite is fine for the demo). Free services sleep after 15 min idle, so add `GET /cron/tick` (protected by a `CRON_SECRET` query param) that runs the reminder check and returns 200. cron-job.org calls it every 5 minutes, which keeps the app awake and fires reminders. Also keep node-cron in-process. All secrets go in Render Environment variables, never in the repo. Twilio webhook = <render URL>/whatsapp.
+- Hosting: **cloudflared quick tunnel from the laptop** for development, the mentor check-in, the submission link and the demo (`cloudflared tunnel --url http://localhost:3000`). No Render/Replit for now. Still push the code to GitHub (needed for submission). Requirements: listen on process.env.PORT (default 3000); TZ=Asia/Kolkata; ffmpeg via ffmpeg-static; seed sample data on startup if the DB is empty. Keep GET /cron/tick (protected by CRON_SECRET) so moving to Render later stays easy. The tunnel URL changes on every cloudflared restart, so read PUBLIC_BASE_URL from .env and print the Twilio webhook URL on startup. Twilio webhook = <tunnel URL>/whatsapp.
 
 ## Users
 - **Parent ("Amma", 68, Kochi):** uses only WhatsApp. Reads little, prefers voice notes in Malayalam.
@@ -42,7 +42,7 @@ English and Malayalam only (en-IN, ml-IN). The elder's language is a setting; re
 - Sarvam AI: speech-to-text for incoming voice notes, text-to-speech for outgoing voice notes (Malayalam/English). Check docs.sarvam.ai for current endpoints and model names.
 - ffmpeg: convert audio (incoming WhatsApp .ogg → wav for Sarvam; Sarvam wav → .mp3/.ogg for WhatsApp).
 - node-cron: reminder scheduler.
-- Deploy on Render (the public URL is both the Twilio webhook and the demo link).
+- Expose it via a cloudflared tunnel (the public URL is both the Twilio webhook and the demo link).
 - `.env` (already exists in the folder, the user fills in values): PORT, PUBLIC_BASE_URL, TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN, TWILIO_WHATSAPP_FROM, PARENT_WHATSAPP, ANTHROPIC_API_KEY, CLAUDE_MODEL, SARVAM_API_KEY, PARENT_NAME, CHILD_NAME, PARENT_LANGUAGE, SEND_MODE, MAX_OUTBOUND_MESSAGES. Never print or commit it (`.gitignore` already lists it). Create `.env.example` with the same keys and no values.
 
 ## Data model
@@ -64,8 +64,8 @@ English and Malayalam only (en-IN, ml-IN). The elder's language is a setting; re
 3. **Text:** Claude classifies it as dose_taken | symptom | question | other and replies kindly (see Guardrails).
 4. GET / dashboard (no login): timeline, medicines (with Approve button for pending items), readings chart, flags.
 
-## Phase 2: Reminders, adherence, trends (by 3:00 PM mentor check-in, running on the Render URL)
-1. Once the child approves, create the dose schedule. Map meal timings to times (breakfast 8:30, lunch 13:30, dinner 20:30).
+## Phase 2: Reminders, adherence, trends (by 3:00 PM mentor check-in, running via the tunnel)
+1. Once the child approves, create the dose schedule. Map meal timings to times using the Kerala defaults from the India section (breakfast 8:00, lunch 13:00, dinner 20:30, configurable).
 2. node-cron every minute: send the WhatsApp reminder "Amma, after breakfast: Amlodipine 5mg, 1 tablet. Reply 1 when taken."
 3. Reply "1" / "taken" / voice "took it" → mark taken. If no reply in 30 min → one gentle nudge. If still none → missed, and alert the child.
 4. Appointment reminders 2 days and 1 day before, plus "bring your reports". Follow-up dates come from the prescription.
@@ -110,4 +110,48 @@ English and Malayalam only (en-IN, ml-IN). The elder's language is a setting; re
 
 ## Submission
 - README: problem, research findings, how it works, guardrails, tools used, what's mocked.
-- GitHub link (no secrets), demo link (Render URL), backup screen recording.
+- GitHub link (no secrets), demo link (tunnel URL; keep the laptop and tunnel running until demos end), backup screen recording.
+
+---
+## FINAL SCOPE FROM 3:00 PM (this overrides earlier phases where they conflict)
+Time left: build until 4:30, submit by 4:40. Build in this order and commit after each item.
+
+**Flow:** child sets up one parent → parent sends a prescription photo on WhatsApp → "I'm reading it now" straight away → one list by meal → child approves → meal reminders with medicine photos → Taken/Later → child sees every dose.
+
+1. **Child setup wizard** (`/setup`, one question per screen, big buttons): parent's name, parent's WhatsApp number, language (Malayalam/English), meal times (Kerala defaults), family member's name. **No login**, because the buildathon rules say the demo must not be behind a login. Show a "Continue with Google" button that just continues, labelled "mocked" in the README.
+2. **Instant acknowledgement:** when a photo arrives, reply at once via TwiML ("I'm reading it now 👀" in the parent's language), then process asynchronously and send the result with the Twilio REST API. That's 2 messages per photo.
+3. **One merged list by meal:** extraction is merged with existing medicines. Duplicates (same generic or brand) are flagged "Possible duplicate". Low-confidence fields are marked **"Please check"**. Grouped as Morning / Afternoon / Night (before or after food), plus SOS (as needed). Course end dates are respected. Nothing is reminded until the child approves (per item, plus "Approve all").
+4. **Medicine photos:** on each medicine card the child can upload (a) a photo of the tablet or strip and (b) a photo of where it's kept, plus a short text note ("steel box on the fridge"). Store them in /public/media.
+5. **Meal reminder = ONE WhatsApp message:** an image (a collage of that meal's medicine photos, built with `sharp`) with a caption: "Amma, after breakfast 🍽️ • Telma 40: 1 tablet (white round, steel box on fridge) • Glycomet 500: 1 tablet. Reply 1 = Taken, 2 = Later, 3 = My list". 1 → mark all taken. 2 → re-remind in 30 min. 3 → send today's list. No reply in 60 min → missed → dashboard alert. Images can have captions on WhatsApp; only audio can't.
+6. **Dashboard tabs** (mobile-first, calm, big text):
+   - **Home:** today's doses per meal (Taken ✓ / Pending / Missed ✗), adherence % for the last 7 days, alerts at the top.
+   - **Medicines:** the list by meal, approve, "Please check" highlights, photos.
+   - **Reports (Samsung Health style):** one card per test showing the latest value, a **High / Low / In range** pill (compared with the range printed on the report), a sparkline trend, and the change since the last report ("↑ 0.5 since Aug"). Tap → full chart with the reference band. Flags say "worth asking your doctor", never a diagnosis.
+   - **Timeline + Outbox** (dry run).
+7. **Seed data** must load when the DB is empty: Amma, 3 medicines with placeholder photos, 3 lab reports over 6 months, 7 days of dose history. The dashboard must never look empty in the demo.
+8. **Guardrails** stay as written. Emergency reply: "Please call 112 / 108 now, or call [child]." Plus a red alert.
+9. **If time remains (after 4:00):** Malayalam voice notes via Sarvam (incoming voice → text; reply as a voice note only when the parent sent one). Doctor visit reminders with "questions to ask" generated from the flags.
+
+**Cut (say "next" in the demo):** real Google login, Hindi/Marathi, phone calls, multiple parents, weekly summaries.
+
+---
+## DESIGN + DEMO MODE (added 3:15 PM, high priority for judging)
+Inspiration: polished mobile health apps. Use our OWN brand; don't copy any other product's name, colours, text or layout pixel for pixel.
+
+**Brand "Dost":** cream background #FBF7F0, deep indigo #1E2A5A (text and primary), marigold #F2A541 (accent and CTAs), soft green #2E9E6B (Taken / In range), coral #E4572E (Missed / High), amber #E8A33D (Please check / Low). Rounded 16px cards, soft shadows, Inter or system font, big readable text, emoji-free UI except in WhatsApp messages. Logo: the word "Dost" with a small marigold dot.
+
+**1. `/demo`: split screen for the stage (the most important screen)**
+- Left: a **phone frame with a WhatsApp-style chat** (the parent, "Amma"). WhatsApp look: green header with the contact "Dost", beige patterned chat background, outgoing bubbles light green on the right, incoming white on the left, timestamps, blue double ticks, a typing indicator ("Dost is typing…") while Claude works.
+  - The composer has a text box, an 📎 attach button (photo/PDF) and a 🎤 button (record from the browser mic or upload audio).
+  - Incoming bot messages render properly: text, **image bubbles with captions** (the meal-reminder collage), **voice-note bubbles** with a play button and waveform, and **quick-reply chips** under reminders: "1 Taken", "2 Later", "3 My list" (tap = sends that reply).
+  - "Quick demo" chips above the chat: "📷 Send sample prescription", "🧪 Send sample lab report", "⏰ Simulate breakfast reminder", "🚨 Say 'chest pain'". These use files in /public/samples.
+- Right: a **second phone frame with the child's app**, live-updating every 2s, so the judges see the WhatsApp action and the dashboard change side by side.
+- Everything works in dry mode (no Twilio) and uses the same handler as the real webhook. In live mode, real WhatsApp messages also appear in this chat.
+- Make it the default landing page for the demo link, with a toggle to open the child app full screen.
+
+**2. Child app (mobile-first, bottom nav: Home · Medicines · Reports · Timeline · Settings)**
+- Header: the parent's avatar initial, name, and a status pill ("On track" green / "Needs attention" amber).
+- **Home:** an adherence ring for today (e.g. 2/3), each meal row with a Taken/Pending/Missed pill, a 7-day bar chart of doses taken (week/month toggle), an "Ongoing medicines" chip list, "Next doctor visit", and alerts on top.
+- **Medicines:** grouped Breakfast / Lunch / Dinner (with time) / SOS. Each row shows the medicine photo thumbnail, name + strength, dose, "after food", purpose in plain words, "until 10 Dec", a "Please check" amber tag and an Approve button. "Approve all" sits at the top.
+- **Reports:** a By test / By date toggle. Each test is a row or card: name, latest value + unit, a High/Low/In range pill, a sparkline, "↑ 0.5 since Aug". Tap → full chart with the reference band.
+- **Setup** (`/setup`): one question per screen, progress dots, "Continue with Google" (mocked), and trust lines: "Never gives medical advice · No app for your parent · Only you see the data".
