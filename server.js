@@ -58,11 +58,14 @@ app.post('/demo/send', (req, res) => {
   X.handleInbound({ body: String(text).trim(), media: media ? { mime: media.mime, buf: Buffer.from(media.b64, 'base64') } : null, ctx: SIM }).catch(fail);
   res.json({ ok: true });
 });
-app.post('/demo/sample', (req, res) => {
-  const f = req.body.kind === 'lab' ? 'public/samples/lab-report.png' : 'public/samples/prescription.png';
-  X.handleInbound({ body: '', media: { mime: 'image/png', buf: fs.readFileSync(f) }, ctx: SIM }).catch(fail);
+const MIME = { '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.png': 'image/png', '.pdf': 'application/pdf' };
+app.post('/demo/file', (req, res) => { // sends a file from public/samples as if the parent sent it
+  const name = path.basename(String(req.body.file || '')), f = path.join('public/samples', name), mime = MIME[path.extname(name).toLowerCase()];
+  if (!mime || !fs.existsSync(f)) return res.status(400).json({ ok: false });
+  X.handleInbound({ body: '', media: { mime, buf: fs.readFileSync(f) }, ctx: SIM }).catch(fail);
   res.json({ ok: true });
 });
+app.post('/demo/approve-all', (req, res) => { for (const m of db.prepare("SELECT id FROM medicines WHERE status='pending_review'").all()) X.approve(m.id); res.json({ ok: true }); });
 app.post('/demo/remind', async (req, res) => { await X.simulateSlot(req.body.slot || X.nextSlot(), SIM).catch(fail); res.json({ ok: true }); });
 app.post('/demo/advance', async (req, res) => { await X.advance30(SIM).catch(fail); res.json({ ok: true }); });
 
