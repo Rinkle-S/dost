@@ -10,7 +10,7 @@ const { E, db, setSet, logEvent, addMsg, parentName } = D;
 
 const PORT = E.PORT || 3000;
 const app = express();
-app.use(express.urlencoded({ extended: false }));
+app.use(express.urlencoded({ extended: false, limit: '25mb' }));
 app.use(express.json({ limit: '25mb' }));
 app.use('/media', express.static('public/media'));
 app.use('/samples', express.static('public/samples'));
@@ -93,6 +93,63 @@ app.get('/app/timeline', (req, res) => res.send(V.timeline(embed(req))));
 app.get('/app/settings', (req, res) => res.send(V.settings(embed(req))));
 app.post('/app/alerts/:id/dismiss', (req, res) => { db.prepare("UPDATE flags SET status='done' WHERE id=?").run(req.params.id); back(req, res); });
 app.post('/app/medicines/:id/approve', (req, res) => { X.approve(Number(req.params.id)); back(req, res); });
+// ---- Add / edit / stop / reject (the family member is the approver) ----
+app.get('/app/medicines/new', (req, res) => res.send(V.medForm(null, embed(req))));
+app.get('/app/medicines/:id/edit', (req, res) => { const m = db.prepare('SELECT * FROM medicines WHERE id=?').get(req.params.id); if (!m) return res.redirect('/app/medicines'); res.send(V.medForm(m, embed(req))); });
+app.post('/app/medicines/save', (req, res) => {
+  const b = req.body, when = [].concat(b.when || []), slots = [];
+  let relation = 'after';
+  if (when.includes('before_breakfast')) { slots.push('breakfast'); relation = 'before'; }
+  if (when.includes('after_breakfast') && !slots.includes('breakfast')) slots.push('breakfast');
+  for (const [w, s] of [['after_lunch', 'lunch'], ['after_dinner', 'dinner'], ['bedtime', 'bedtime']]) if (when.includes(w)) slots.push(s);
+  const sos = when.includes('sos') && !slots.length ? 1 : 0;
+  const name = String(b.name || '').trim().slice(0, 60);
+  if (!name) return res.redirect('/app/medicines/new');
+  const dose = [b.strength, b.qty].map(s => String(s || '').trim()).filter(Boolean).join(' · ');
+  const freq = sos ? 'Only when needed (SOS)' : `${['Once', 'Twice', 'Three times', 'Four times'][slots.length - 1] || 'Not set'} a day`;
+  const look = require('./lib/tablet').LOOKS.includes(b.look) ? b.look : null;
+  const common = require('./lib/common-meds').find(c => c.name.toLowerCase() === name.toLowerCase());
+  const vals = [name, dose, freq, relation, JSON.stringify(slots), sos, String(b.purpose || '').slice(0, 60), /^\d{4}-\d\d-\d\d$/.test(b.until || '') ? b.until : null, look];
+  let id = Number(b.id) || null;
+  if (id) {
+    db.prepare('UPDATE medicines SET name=?, dose=?, frequency=?, relation=?, slots=?, sos=?, purpose=?, end_date=?, look=COALESCE(?, look) WHERE id=?').run(...vals, id);
+    logEvent('medicine_edited', `${name} edited by ${D.childName()}`);
+  } else {
+    id = db.prepare(`INSERT INTO medicines(name, dose, frequency, relation, slots, sos, purpose, end_date, look, generic, status, confidence, uncertain, source, created_at) VALUES(?,?,?,?,?,?,?,?,?,?,'active',1,'[]',?,?)`)
+      .run(...vals, common?.generic || '', `added by ${D.childName()}`, D.ist()).lastInsertRowid;
+    logEvent('medicine_added', `${name} added by ${D.childName()} (active)`);
+  }
+  if (b.photo_b64) { // a real photo always wins over the picture
+    const f = `med-${id}-${Date.now()}.jpg`;
+    fs.writeFileSync(path.join('public/media', f), Buffer.from(b.photo_b64, 'base64'));
+    db.prepare('UPDATE medicines SET photo_med=?, look=NULL WHERE id=?').run(`/media/${f}`, id);
+  }
+  if (db.prepare('SELECT status FROM medicines WHERE id=?').get(id).status === 'active') X.createSchedule(id);
+  res.redirect('/app/medicines' + (embed(req) ? '?embed=1' : ''));
+});
+const stopMed = (id, status, verb) => {
+  const m = db.prepare('SELECT name FROM medicines WHERE id=?').get(id); if (!m) return;
+  db.prepare('UPDATE medicines SET status=? WHERE id=?').run(status, id);
+  db.prepare("DELETE FROM doses WHERE medicine_id=? AND status='pending' AND reminded_at IS NULL AND scheduled_at>?").run(id, D.ist());
+  logEvent(`medicine_${verb}`, `${m.name} ${verb} by ${D.childName()}`);
+};
+app.post('/app/medicines/:id/stop', (req, res) => { stopMed(req.params.id, 'stopped', 'stopped'); back(req, res); });
+app.post('/app/medicines/:id/reject', (req, res) => { stopMed(req.params.id, 'rejected', 'rejected'); back(req, res); });
+app.post('/app/doses/mark', (req, res) => { // Home: "Mark as taken" for a meal
+  const rows = db.prepare("SELECT d.id, m.name FROM doses d JOIN medicines m ON m.id=d.medicine_id WHERE m.status='active' AND d.slot=? AND substr(d.scheduled_at,1,10)=? AND d.status IN ('pending','missed')").all(req.body.slot, D.today());
+  if (rows.length) {
+    db.prepare(`UPDATE doses SET status='taken', snooze_at=NULL, confirmed_at=? WHERE id IN (${rows.map(() => '?').join(',')})`).run(D.ist(), ...rows.map(r => r.id));
+    logEvent('dose_taken', `${req.body.slot}: ${rows.map(r => r.name).join(', ')} taken (confirmed by ${D.childName()})`);
+  }
+  back(req, res);
+});
+app.post('/app/upload', async (req, res) => { // child uploads a prescription/report: same reading flow, no WhatsApp replies
+  const { mime, b64 } = req.body;
+  if (!/^(image\/|application\/pdf)/.test(mime || '') || !b64) return res.status(400).json({ ok: false, error: 'Please choose a photo or PDF' });
+  logEvent('upload', `Uploaded by ${D.childName()} in the app`);
+  try { await X.handleInbound({ body: '', media: { mime, buf: Buffer.from(b64, 'base64') }, ctx: { silent: true } }); res.json({ ok: true }); }
+  catch (e) { fail(e); res.json({ ok: false, error: e.message }); }
+});
 app.post('/app/medicines/approve-all', (req, res) => { for (const m of db.prepare("SELECT id FROM medicines WHERE status='pending_review'").all()) X.approve(m.id); back(req, res); });
 app.post('/app/medicines/:id/note', (req, res) => { db.prepare('UPDATE medicines SET place_note=? WHERE id=?').run(String(req.body.preset || req.body.note || '').slice(0, 120), req.params.id); back(req, res); });
 app.post('/app/medicines/:id/look', (req, res) => { if (require('./lib/tablet').LOOKS.includes(req.body.look)) { db.prepare('UPDATE medicines SET look=? WHERE id=?').run(req.body.look, req.params.id); logEvent('look', 'Tablet look chosen: ' + req.body.look); } back(req, res); });
