@@ -74,6 +74,10 @@ app.get('/demo/tts/:id', async (req, res) => { // 🔊 on a bot bubble: Sarvam T
     res.json({ ok: true, url: `/audio/${id}.mp3` });
   } catch (e) { fail(e); res.status(500).json({ ok: false, error: e.message }); }
 });
+app.post('/demo/lang', (req, res) => { // same setting as Settings / setup
+  if (['en-IN', 'ml-IN'].includes(req.body.lang)) { setSet('language', req.body.lang); logEvent('setting', `Language set to ${req.body.lang === 'ml-IN' ? 'Malayalam' : 'English'}`); }
+  res.json({ ok: true });
+});
 app.post('/demo/approve-all', (req, res) => { for (const m of db.prepare("SELECT id FROM medicines WHERE status='pending_review'").all()) X.approve(m.id); res.json({ ok: true }); });
 app.post('/demo/remind', async (req, res) => { await X.simulateSlot(req.body.slot || X.nextSlot(), SIM).catch(fail); res.json({ ok: true }); });
 app.post('/demo/advance', async (req, res) => { await X.advance30(SIM).catch(fail); res.json({ ok: true }); });
@@ -81,7 +85,7 @@ app.post('/demo/advance', async (req, res) => { await X.advance30(SIM).catch(fai
 // ---------- Child app ----------
 const embed = (req) => req.query.embed === '1';
 const back = (req, res, fallback = '/app') => res.redirect(req.body?.back || (req.get('referer') || fallback));
-app.get('/app', (req, res) => res.send(V.home(embed(req))));
+app.get('/app', (req, res) => res.send(V.home(embed(req), req.query.alerts === 'all')));
 app.get('/app/medicines', (req, res) => res.send(V.medicines(embed(req))));
 app.get('/app/reports', (req, res) => res.send(V.reports(embed(req))));
 app.get('/app/timeline', (req, res) => res.send(V.timeline(embed(req))));
