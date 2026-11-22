@@ -39,20 +39,20 @@ async function until(fn, ms = 60000, step = 500) { const t = Date.now(); while (
     check('2. 🎤 tap again stops recording', !!stopped);
 
     // 3. parent voice bubble with play button + transcript
-    const inBubble = await until(() => page.evaluate(() => { const b = [...document.querySelectorAll('.b.out')].find(x => x.querySelector('audio')); const t = b?.querySelector('.italic')?.textContent || ''; return b && t ? t : null; }), 60000);
+    const inBubble = await until(() => page.evaluate(() => { const b = [...document.querySelectorAll('.b.out')].find(x => x.querySelector('audio')); const t = b?.querySelector('.vtr')?.textContent || ''; return b && t ? t : null; }), 60000);
     check('3. parent voice bubble shows play button + transcript', !!inBubble && /dolo|knee/i.test(inBubble), `transcript=${inBubble}`);
 
     // 4. bot replies with a voice note (Sarvam TTS)
-    const botVoice = await until(() => page.evaluate(() => { const b = [...document.querySelectorAll('.b.in')].find(x => x.querySelector('audio')); return b ? { src: b.querySelector('audio').src, text: b.querySelector('.italic')?.textContent || '' } : null; }), 60000);
+    const botVoice = await until(() => page.evaluate(() => { const b = [...document.querySelectorAll('.b.in')].find(x => x.querySelector('audio')); return b ? { src: b.querySelector('audio').src, text: b.querySelector('.vtr')?.textContent || '' } : null; }), 60000);
     check('4. bot replies as a voice note', !!botVoice && /\/audio\/v-.*\.mp3$/.test(botVoice.src), JSON.stringify(botVoice));
     if (botVoice) {
       const st = await page.evaluate(async (src) => { const r = await fetch(src); return { ok: r.ok, type: r.headers.get('content-type'), size: (await r.arrayBuffer()).byteLength }; }, botVoice.src);
       check('5. bot voice note is a playable mp3', st.ok && /audio/.test(st.type) && st.size > 2000, JSON.stringify(st));
-      const played = await page.evaluate(async () => { const b = [...document.querySelectorAll('.b.in')].find(x => x.querySelector('audio')); b.querySelector('button').click(); await new Promise(r => setTimeout(r, 1200)); const a = b.querySelector('audio'); return { paused: a.paused, t: a.currentTime, btn: b.querySelector('button').textContent }; });
+      const played = await page.evaluate(async () => { const b = [...document.querySelectorAll('.b.in')].find(x => x.querySelector('audio')); b.querySelector('.vplay').click(); await new Promise(r => setTimeout(r, 1200)); const a = b.querySelector('audio'); return { paused: a.paused, t: a.currentTime, btn: b.querySelector('.vplay').innerHTML.length }; });
       check('6. ▶ plays the voice note', !played.paused && played.t > 0, JSON.stringify(played));
       await page.evaluate(() => document.querySelectorAll('audio').forEach(a => a.pause()));
     }
-    await page.screenshot({ path: path.join(SHOTS, '2-voice-reply.png') });
+    await page.screenshot({ path: path.join(SHOTS, '2-voice-reply.png'), clip: { x: 250, y: 80, width: 440, height: 360 } });
 
     // 7. 🔊 on a bot text bubble
     await page.type('#msg', 'where is ecosprin kept'); await page.keyboard.press('Enter');
