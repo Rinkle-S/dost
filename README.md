@@ -1,20 +1,14 @@
 # Dost: a health friend for elderly parents, on WhatsApp
 
-**Send a photo. Get one checked list.**
-
 Dost helps families look after an elderly parent from another city. The parent uses only WhatsApp: no app, no OTP, nothing to install. The family member (the "child") sees everything in a simple web app.
 
 > Dost organises information and reminders. It does not give medical advice.
 
-## The problem (from conversations with families)
+## The problem
 
-| What we heard | Evidence |
-|---|---|
-| Elders forget or mix up medicines | One parent took the same tablet twice |
-| They can't read prescription slips or lab reports | The chemist reads the handwriting for them |
-| Phones and apps are hard | 5 of 7 fear making a costly mistake |
-| Phone reminders don't stick, meal routines do | 0 of 7 use phone reminders; meal-time habits work |
-| The child worries and is willing to pay | To test at ₹299/month |
+Many elderly parents in India take several medicines a day, can't always read handwritten prescriptions or English lab reports, and aren't comfortable with new apps, while their children often live in another city. (RFS 17 and 52 from the Request for Builders.)
+
+Dost starts with English and Malayalam, and is built to add more Indian languages.
 
 ## How it works
 

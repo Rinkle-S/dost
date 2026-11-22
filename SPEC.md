@@ -6,10 +6,10 @@ It works for any elder; "Amma" is just the sample user in the seed data and demo
 Buildathon spec (4 hours, solo). Claude Code: read this whole file before you start, then build phase by phase.
 After each phase, stop, tell me how to test it, and commit to git.
 
-## Problem (from user research)
-- Elders forget or mix up medicines (one took a tablet twice).
-- They can't read prescription slips or lab reports (the chemist reads the handwriting for them).
-- Phones and apps are hard (5 of 7 fear making a costly mistake). WhatsApp and voice are what they already use.
+## Problem
+- Elders forget or mix up medicines.
+- They can't always read handwritten prescriptions or English lab reports.
+- Phones and new apps are hard. WhatsApp and voice are what they already use.
 - Reminders tied to meals work.
 - The adult child worries and pays (to test at ₹299/month).
 
