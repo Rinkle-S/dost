@@ -5,3 +5,7 @@ node_modules/
 public/audio/
 uploads/
 .DS_Store
+public/media/in-*
+public/media/med-*-*.jpg
+public/media/place-*-*.jpg
+public/reminders/
