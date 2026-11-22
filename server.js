@@ -48,6 +48,7 @@ app.get('/cron/tick', async (req, res) => {
 // ---------- Demo (split screen, dry: never touches Twilio) ----------
 const SIM = { sim: true };
 app.get('/', (req, res) => res.redirect('/demo'));
+app.get('/favicon.ico', (req, res) => res.type('image/svg+xml').send('<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="8" fill="#1E2A5A"/><circle cx="16" cy="16" r="7" fill="#F2A541"/></svg>'));
 app.get('/demo', (req, res) => res.send(V.demo()));
 app.get('/demo/chat', (req, res) => {
   const after = Number(req.query.after || 0);
