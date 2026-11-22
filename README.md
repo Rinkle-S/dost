@@ -25,7 +25,7 @@ Dost helps families look after an elderly parent from another city. The parent u
 5. **Meal reminders** go out on WhatsApp as one image showing that meal's medicines (photo of the tablet and where it's kept) with the list as the caption. The parent replies **1 Taken · 2 Later · 3 My list**.
 6. **Child's app** shows each dose (taken, pending or missed), 7-day adherence, alerts, and **Reports**: each test shown as High / Low / In range against the range printed on the report, with its trend over time.
 
-**Languages:** English and Malayalam text. Replies mirror the parent's language. Malayalam voice notes (Sarvam AI) are **in progress**.
+**Languages:** English and Malayalam text. Replies mirror the parent's language. Malayalam voice notes work both ways (Sarvam AI): a voice note in is transcribed and handled like text, and the reply comes back as one voice note. In `/demo`, tap 🎤 to record from the browser mic.
 
 ## Guardrails
 
@@ -47,7 +47,7 @@ Dost helps families look after an elderly parent from another city. The parent u
 
 - **Claude Code** (built on the day) and the **Claude API** (`claude-sonnet-5-5`) for reading prescriptions and lab reports, understanding replies, and writing flags
 - **Twilio WhatsApp Sandbox** for WhatsApp messaging
-- **Sarvam AI** for Malayalam speech-to-text and text-to-speech (in progress)
+- **Sarvam AI** for Malayalam speech-to-text (saaras:v4) and text-to-speech (bulbul:v3)
 - Node.js, Express, SQLite (better-sqlite3), Tailwind, inline SVG charts, sharp (reminder collages), node-cron, ffmpeg-static
 - Cloudflare Tunnel for the public demo link
 
@@ -62,7 +62,7 @@ Dost helps families look after an elderly parent from another city. The parent u
 
 ## Next
 
-Malayalam voice notes both ways · doctor-visit reminders with "questions to ask" · real Google login · more languages (Hindi, Tamil, Kannada) · call escalation for missed doses · weekly family summary · more than one parent.
+doctor-visit reminders with "questions to ask" · real Google login · more languages (Hindi, Tamil, Kannada) · call escalation for missed doses · weekly family summary · more than one parent.
 
 ## Run locally
 
