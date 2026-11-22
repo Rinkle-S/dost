@@ -1,0 +1,359 @@
+{
+  "parent": {
+    "name": "Amma",
+    "full_name": "Sarojini",
+    "age": 68,
+    "city": "Kochi",
+    "language": "ml-IN",
+    "whatsapp": "whatsapp:+910000000000"
+  },
+  "family": {
+    "name": "Rinkle",
+    "relation": "daughter",
+    "city": "Bengaluru"
+  },
+  "meal_times": {
+    "breakfast": "08:00",
+    "lunch": "13:00",
+    "dinner": "20:30"
+  },
+  "medicines": [
+    {
+      "brand": "Telma 40",
+      "generic": "Telmisartan 40 mg",
+      "purpose": "blood pressure",
+      "dose": "1 tablet",
+      "pattern": "1-0-0",
+      "timing": "after food",
+      "slots": [
+        "breakfast"
+      ],
+      "end_date": "2026-12-22",
+      "photo": "med_telma_40.png",
+      "place_photo": "place_steel_box_fridge.png",
+      "place_note": "Steel box on top of the fridge",
+      "looks_like": "small white oval tablet",
+      "status": "active"
+    },
+    {
+      "brand": "Glycomet 500",
+      "generic": "Metformin 500 mg",
+      "purpose": "sugar",
+      "dose": "1 tablet",
+      "pattern": "1-0-1",
+      "timing": "after food",
+      "slots": [
+        "breakfast",
+        "dinner"
+      ],
+      "end_date": null,
+      "photo": "med_glycomet_500.png",
+      "place_photo": "place_steel_box_fridge.png",
+      "place_note": "Steel box on top of the fridge",
+      "looks_like": "big white oval tablet with a line",
+      "status": "active"
+    },
+    {
+      "brand": "Ecosprin 75",
+      "generic": "Aspirin 75 mg",
+      "purpose": "heart / blood thinner",
+      "dose": "1 tablet",
+      "pattern": "0-0-1",
+      "timing": "after food",
+      "slots": [
+        "dinner"
+      ],
+      "end_date": null,
+      "photo": "med_ecosprin_75.png",
+      "place_photo": "place_bedside_drawer.png",
+      "place_note": "Bedside drawer, left side",
+      "looks_like": "small orange round tablet",
+      "status": "active"
+    },
+    {
+      "brand": "Pan 40",
+      "generic": "Pantoprazole 40 mg",
+      "purpose": "acidity",
+      "dose": "1 tablet",
+      "pattern": "1-0-0",
+      "timing": "before food",
+      "slots": [
+        "breakfast"
+      ],
+      "end_date": "2026-12-06",
+      "photo": "med_pan_40.png",
+      "place_photo": "place_kitchen_shelf_red_tin.png",
+      "place_note": "Red tin, kitchen shelf",
+      "looks_like": "yellow oval tablet",
+      "status": "pending_review",
+      "please_check": [
+        "duration: '14 days' was hard to read"
+      ]
+    },
+    {
+      "brand": "Dolo 650",
+      "generic": "Paracetamol 650 mg",
+      "purpose": "fever / pain",
+      "dose": "1 tablet",
+      "pattern": "SOS",
+      "timing": "as needed, max 3 a day",
+      "slots": [
+        "sos"
+      ],
+      "end_date": null,
+      "photo": "med_dolo_650.png",
+      "place_photo": "place_kitchen_shelf_red_tin.png",
+      "place_note": "Red tin, kitchen shelf",
+      "looks_like": "white long tablet",
+      "status": "active"
+    }
+  ],
+  "dose_history_rule": "Last 7 days: all breakfast doses taken; dinner Glycomet+Ecosprin missed on day -5 and day -2; lunch none. Today: breakfast taken at 08:12, dinner pending.",
+  "appointments": [
+    {
+      "doctor": "Dr. K. Rao",
+      "reason": "2-week review with FBS, PPBS, HbA1c",
+      "date": "2026-12-06T10:30",
+      "bring": [
+        "latest lab report",
+        "medicine strips"
+      ]
+    }
+  ],
+  "lab_reports": [
+    {
+      "date": "15 May 2026",
+      "file": "lab_report_2026-05.pdf"
+    },
+    {
+      "date": "18 Aug 2026",
+      "file": "lab_report_2026-08.pdf"
+    },
+    {
+      "date": "14 Nov 2026",
+      "file": "lab_report_2026-11.pdf"
+    }
+  ],
+  "readings": [
+    {
+      "test": "HbA1c (Glycated Haemoglobin)",
+      "unit": "%",
+      "ref_low": 4.0,
+      "ref_high": 5.6,
+      "values": [
+        {
+          "date": "2026-05",
+          "value": 6.9
+        },
+        {
+          "date": "2026-08",
+          "value": 7.4
+        },
+        {
+          "date": "2026-11",
+          "value": 7.9
+        }
+      ]
+    },
+    {
+      "test": "Fasting Blood Sugar (FBS)",
+      "unit": "mg/dL",
+      "ref_low": 70,
+      "ref_high": 100,
+      "values": [
+        {
+          "date": "2026-05",
+          "value": 118
+        },
+        {
+          "date": "2026-08",
+          "value": 132
+        },
+        {
+          "date": "2026-11",
+          "value": 146
+        }
+      ]
+    },
+    {
+      "test": "Post Prandial Blood Sugar (PPBS)",
+      "unit": "mg/dL",
+      "ref_low": null,
+      "ref_high": 140,
+      "values": [
+        {
+          "date": "2026-05",
+          "value": 160
+        },
+        {
+          "date": "2026-08",
+          "value": 178
+        },
+        {
+          "date": "2026-11",
+          "value": 195
+        }
+      ]
+    },
+    {
+      "test": "Total Cholesterol",
+      "unit": "mg/dL",
+      "ref_low": null,
+      "ref_high": 200,
+      "values": [
+        {
+          "date": "2026-05",
+          "value": 214
+        },
+        {
+          "date": "2026-08",
+          "value": 206
+        },
+        {
+          "date": "2026-11",
+          "value": 198
+        }
+      ]
+    },
+    {
+      "test": "LDL Cholesterol",
+      "unit": "mg/dL",
+      "ref_low": null,
+      "ref_high": 100,
+      "values": [
+        {
+          "date": "2026-05",
+          "value": 132
+        },
+        {
+          "date": "2026-08",
+          "value": 126
+        },
+        {
+          "date": "2026-11",
+          "value": 118
+        }
+      ]
+    },
+    {
+      "test": "HDL Cholesterol",
+      "unit": "mg/dL",
+      "ref_low": 40,
+      "ref_high": null,
+      "values": [
+        {
+          "date": "2026-05",
+          "value": 44
+        },
+        {
+          "date": "2026-08",
+          "value": 45
+        },
+        {
+          "date": "2026-11",
+          "value": 47
+        }
+      ]
+    },
+    {
+      "test": "Triglycerides",
+      "unit": "mg/dL",
+      "ref_low": null,
+      "ref_high": 150,
+      "values": [
+        {
+          "date": "2026-05",
+          "value": 168
+        },
+        {
+          "date": "2026-08",
+          "value": 160
+        },
+        {
+          "date": "2026-11",
+          "value": 152
+        }
+      ]
+    },
+    {
+      "test": "Serum Creatinine",
+      "unit": "mg/dL",
+      "ref_low": 0.6,
+      "ref_high": 1.1,
+      "values": [
+        {
+          "date": "2026-05",
+          "value": 0.9
+        },
+        {
+          "date": "2026-08",
+          "value": 1.0
+        },
+        {
+          "date": "2026-11",
+          "value": 1.0
+        }
+      ]
+    },
+    {
+      "test": "Haemoglobin",
+      "unit": "g/dL",
+      "ref_low": 12.0,
+      "ref_high": 15.0,
+      "values": [
+        {
+          "date": "2026-05",
+          "value": 12.1
+        },
+        {
+          "date": "2026-08",
+          "value": 11.8
+        },
+        {
+          "date": "2026-11",
+          "value": 11.6
+        }
+      ]
+    },
+    {
+      "test": "TSH",
+      "unit": "uIU/mL",
+      "ref_low": 0.4,
+      "ref_high": 4.0,
+      "values": [
+        {
+          "date": "2026-05",
+          "value": 3.2
+        },
+        {
+          "date": "2026-08",
+          "value": 3.5
+        },
+        {
+          "date": "2026-11",
+          "value": 3.4
+        }
+      ]
+    },
+    {
+      "test": "Vitamin D (25-OH)",
+      "unit": "ng/mL",
+      "ref_low": 30,
+      "ref_high": 100,
+      "values": [
+        {
+          "date": "2026-05",
+          "value": 18
+        },
+        {
+          "date": "2026-08",
+          "value": 22
+        },
+        {
+          "date": "2026-11",
+          "value": 26
+        }
+      ]
+    }
+  ]
+}

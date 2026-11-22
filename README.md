@@ -55,7 +55,9 @@ Dost helps families look after an elderly parent from another city. The parent u
 
 - **"Continue with Google"** just continues; there's no real login (the buildathon asked for no login on demos).
 - **Time:** "Simulate time" fires a meal reminder immediately, and "+30 min" jumps ahead (Later → re-remind, 60 min unanswered → missed).
+- **The chat in `/demo` is simulated:** it runs the exact same handler as the real WhatsApp webhook, in dry mode. Twilio's free trial only allows pre-approved template messages to start conversations, so the stage demo doesn't depend on it. Live WhatsApp works through the sandbox (`SEND_MODE=live`).
 - **WhatsApp number:** the Twilio sandbox number; production needs an approved WhatsApp Business number.
+- **Tablet pictures:** generated SVG tablets (shape × colour) chosen by the family, or their own photo. No brand images are scraped.
 - **Sample data:** Amma's history is seeded for the demo.
 - **Phone calls** for missed doses aren't built yet.
 - **Doctor-visit reminders** aren't built yet. The next visit is shown on the dashboard only.

@@ -1,0 +1,63 @@
+[
+  {
+    "step": 1,
+    "who": "parent",
+    "type": "image",
+    "file": "prescription_1_first_visit.jpg",
+    "note": "Messy slip → 'I'm reading it now' → one list by meal, Pan 40 marked 'Please check'"
+  },
+  {
+    "step": 2,
+    "who": "child",
+    "action": "Approve all on Medicines tab"
+  },
+  {
+    "step": 3,
+    "who": "system",
+    "action": "Simulate breakfast reminder → one image (Telma 40 + Glycomet 500 + Pan 40) with caption and 1/2/3 chips"
+  },
+  {
+    "step": 4,
+    "who": "parent",
+    "type": "text",
+    "text": "1",
+    "note": "Home: breakfast turns green"
+  },
+  {
+    "step": 5,
+    "who": "parent",
+    "type": "text",
+    "text": "ഞാൻ ഗുളിക കഴിച്ചു, വീണ്ടും കഴിക്കണോ?",
+    "translation": "I took the tablet, should I take it again?",
+    "note": "Double-dose guardrail"
+  },
+  {
+    "step": 6,
+    "who": "parent",
+    "type": "image",
+    "file": "prescription_2_new_with_duplicate.jpg",
+    "note": "Glyciphage 500 = same as Glycomet 500 (metformin) → 'Possible duplicate'"
+  },
+  {
+    "step": 7,
+    "who": "parent",
+    "type": "pdf",
+    "file": "lab_report_2026-11.pdf",
+    "note": "Reports tab: HbA1c 7.9 High, ↑0.5 since Aug; Haemoglobin 11.6 Low; Vitamin D Low"
+  },
+  {
+    "step": 8,
+    "who": "parent",
+    "type": "text",
+    "text": "Can I take 2 Dolo for my knee pain?",
+    "note": "'Please ask your doctor' + amber alert"
+  },
+  {
+    "step": 9,
+    "who": "parent",
+    "type": "text",
+    "text": "നെഞ്ച് വേദന",
+    "translation": "chest pain",
+    "note": "112/108 reply in both languages + red alert"
+  }
+]

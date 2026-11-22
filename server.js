@@ -65,6 +65,15 @@ app.post('/demo/file', (req, res) => { // sends a file from public/samples as if
   X.handleInbound({ body: '', media: { mime, buf: fs.readFileSync(f) }, ctx: SIM }).catch(fail);
   res.json({ ok: true });
 });
+app.get('/demo/tts/:id', async (req, res) => { // 🔊 on a bot bubble: Sarvam TTS, cached per message
+  const m = db.prepare("SELECT * FROM messages WHERE id=? AND dir='out'").get(Number(req.params.id));
+  if (!m || !m.body) return res.status(404).json({ ok: false });
+  const id = `msg-${m.id}`, file = path.join('public/audio', `${id}.mp3`);
+  try {
+    if (!fs.existsSync(file)) await require('./lib/voice').textToSpeech(m.body, /[ഀ-ൿ]/.test(m.body) ? 'ml' : 'en', id);
+    res.json({ ok: true, url: `/audio/${id}.mp3` });
+  } catch (e) { fail(e); res.status(500).json({ ok: false, error: e.message }); }
+});
 app.post('/demo/approve-all', (req, res) => { for (const m of db.prepare("SELECT id FROM medicines WHERE status='pending_review'").all()) X.approve(m.id); res.json({ ok: true }); });
 app.post('/demo/remind', async (req, res) => { await X.simulateSlot(req.body.slot || X.nextSlot(), SIM).catch(fail); res.json({ ok: true }); });
 app.post('/demo/advance', async (req, res) => { await X.advance30(SIM).catch(fail); res.json({ ok: true }); });
@@ -80,13 +89,14 @@ app.get('/app/settings', (req, res) => res.send(V.settings(embed(req))));
 app.post('/app/alerts/:id/dismiss', (req, res) => { db.prepare("UPDATE flags SET status='done' WHERE id=?").run(req.params.id); back(req, res); });
 app.post('/app/medicines/:id/approve', (req, res) => { X.approve(Number(req.params.id)); back(req, res); });
 app.post('/app/medicines/approve-all', (req, res) => { for (const m of db.prepare("SELECT id FROM medicines WHERE status='pending_review'").all()) X.approve(m.id); back(req, res); });
-app.post('/app/medicines/:id/note', (req, res) => { db.prepare('UPDATE medicines SET place_note=? WHERE id=?').run(String(req.body.note || '').slice(0, 120), req.params.id); back(req, res); });
+app.post('/app/medicines/:id/note', (req, res) => { db.prepare('UPDATE medicines SET place_note=? WHERE id=?').run(String(req.body.preset || req.body.note || '').slice(0, 120), req.params.id); back(req, res); });
+app.post('/app/medicines/:id/look', (req, res) => { if (require('./lib/tablet').LOOKS.includes(req.body.look)) { db.prepare('UPDATE medicines SET look=? WHERE id=?').run(req.body.look, req.params.id); logEvent('look', 'Tablet look chosen: ' + req.body.look); } back(req, res); });
 app.post('/app/medicines/:id/photo', (req, res) => {
   const { kind, b64 } = req.body;
   if (!['med', 'place'].includes(kind) || !b64) return res.status(400).end();
   const name = `${kind}-${Number(req.params.id)}-${Date.now()}.jpg`;
   fs.writeFileSync(path.join('public/media', name), Buffer.from(b64, 'base64'));
-  db.prepare(`UPDATE medicines SET ${kind === 'med' ? 'photo_med' : 'photo_place'}=? WHERE id=?`).run(`/media/${name}`, req.params.id);
+  db.prepare(`UPDATE medicines SET ${kind === 'med' ? 'photo_med=?, look=NULL' : 'photo_place=?'} WHERE id=?`).run(`/media/${name}`, req.params.id); // a real photo replaces the chosen look
   logEvent('photo', `${kind === 'med' ? 'Medicine' : 'Storage place'} photo added`);
   res.json({ ok: true });
 });
